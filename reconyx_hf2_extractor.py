@@ -10,6 +10,10 @@ from typing import Dict, List, Tuple
 
 import cv2
 import numpy as np
+try:
+    from tqdm import tqdm  # type: ignore
+except Exception:  # pragma: no cover
+    tqdm = None  # type: ignore
 
 
 # Your fixed temperature digits ROI (excluding °C)
@@ -182,6 +186,7 @@ def main() -> None:
     ap.add_argument("--rename", action="store_true", help="Actually rename files")
     ap.add_argument("--minutes-seconds-zero", action="store_true", help="Force MM and SS to 00 in rename")
     ap.add_argument("--max-images", type=int, default=None, help="Process at most N images (debug)")
+    ap.add_argument("--no-progress", action="store_true", help="Disable progress bar")
     args = ap.parse_args()
 
     folder = Path(args.input)
@@ -214,7 +219,11 @@ def main() -> None:
             ]
         )
 
-        for p in images:
+        it = images
+        if not args.no_progress and tqdm is not None:
+            it = tqdm(images, desc="Processing", unit="img")
+
+        for p in it:
             try:
                 im = cv2.imread(str(p))
                 if im is None:
