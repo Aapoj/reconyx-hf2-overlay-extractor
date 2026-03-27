@@ -29,8 +29,15 @@ Rename files to `RYYMMDDHH0000.JPG` while extracting:
 python reconyx_hf2_extractor.py --input "PATH_TO_IMAGES" --positions positions.json --glyphs glyph_crops --csv outputs.csv --minutes-seconds-zero --rename
 ```
 
+### Rename format
+When `--rename` is enabled, files are renamed to:
+- Positive: `RYYYYMMDDHH0000TT.JPG` (e.g. 4°C -> `...000004.JPG`)
+- Negative: `RYYYYMMDDHH0000nTT.JPG` (e.g. -9°C -> `...0000n09.JPG`)
+
+Where `TT` is always two digits.
+
 ### GUI mode
-Launch a simple GUI (folder picker + progress bar):
+Launch the batch GUI (add multiple jobs, run in parallel, per-job + overall progress):
 
 ```powershell
 python reconyx_hf2_extractor.py --gui
