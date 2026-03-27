@@ -29,6 +29,20 @@ Rename files to `RYYMMDDHH0000.JPG` while extracting:
 python reconyx_hf2_extractor.py --input "PATH_TO_IMAGES" --positions positions.json --glyphs glyph_crops --csv outputs.csv --minutes-seconds-zero --rename
 ```
 
+### GUI mode
+Launch a simple GUI (folder picker + progress bar):
+
+```powershell
+python reconyx_hf2_extractor.py --gui
+```
+
+### Help
+The script supports `--help` / `-h`:
+
+```powershell
+python reconyx_hf2_extractor.py --help
+```
+
 ## Output CSV columns
 - `original_file`
 - `new_file`
