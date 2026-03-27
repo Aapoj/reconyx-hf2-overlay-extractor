@@ -1,6 +1,6 @@
 # Reconyx HyperFire 2 Overlay Extractor
 
-Minimal inference-only tool to extract timestamp and temperature from overlay text using template matching.
+Tool to extract timestamp and temperature from overlay text using template matching.
 
 This package is scoped to **Reconyx HyperFire 2 Cellular** overlays that match the included calibration artifacts.
 
@@ -10,7 +10,6 @@ This package is scoped to **Reconyx HyperFire 2 Cellular** overlays that match t
 - `glyph_crops/` - glyph templates (digits and separators)
 - `requirements.txt` - runtime dependencies
 
-This package does **not** include full camera images or research datasets.
 
 ## Setup
 ```powershell
@@ -44,4 +43,5 @@ python reconyx_hf2_extractor.py --input "PATH_TO_IMAGES" --positions positions.j
 ## Limitations
 - Calibrated for one overlay style (Reconyx HyperFire 2 Cellular).
 - If overlay position/font differs, new `positions.json` and `glyph_crops/` are required.
+- Minutes and Seconds are defaulted to zero in renaming.
 
