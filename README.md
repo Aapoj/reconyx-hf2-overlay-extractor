@@ -31,7 +31,7 @@ python reconyx_hf2_extractor.py --input "PATH_TO_IMAGES" --positions positions.j
 
 ### Rename format
 When `--rename` is enabled, files are renamed to:
-- Positive: `RYYYYMMDDHH0000TT.JPG` (e.g. 4°C -> `...000004.JPG`)
+- Non-negative: `RYYYYMMDDHH0000pTT.JPG` (e.g. 4°C -> `...0000p04.JPG`, 0°C -> `...0000p00.JPG`)
 - Negative: `RYYYYMMDDHH0000nTT.JPG` (e.g. -9°C -> `...0000n09.JPG`)
 
 Where `TT` is always two digits.

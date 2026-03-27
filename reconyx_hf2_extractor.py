@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 import os
+import re
 import threading
 import queue
 from concurrent.futures import ThreadPoolExecutor
@@ -192,12 +193,16 @@ def run_extraction(
     no_progress: bool,
     progress_cb=None,
     log_cb=None,
+    skip_already_renamed: bool = False,
 ) -> None:
     images = sorted([p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in {".jpg", ".jpeg", ".png"}])
     if max_images is not None:
         images = images[: max(0, max_images)]
     if not images:
         raise SystemExit(f"No images found in: {folder}")
+
+    # Matches our rename scheme: RYYYYMMDDHH0000[pn]TT.JPG
+    renamed_re = re.compile(r"^R\d{10}0000[pn]\d{2}\.JPG$", re.IGNORECASE)
 
     pos = load_positions(positions_path)
     templates = load_templates(glyphs_path)
@@ -230,6 +235,7 @@ def run_extraction(
 
         for p in it:
             try:
+                already_renamed = bool(renamed_re.match(p.name))
                 im = cv2.imread(str(p))
                 if im is None:
                     raise ValueError("OpenCV cannot read")
@@ -271,18 +277,22 @@ def run_extraction(
                 if len(digits) == 0:
                     raise ValueError("Temperature parse failed (no digits)")
                 digits = digits[-2:] if len(digits) >= 2 else ("0" + digits)
-                temp_suffix = ("n" + digits) if temp_out.strip().startswith("-") else digits
+                # n = negative, p = non-negative (including 0)
+                temp_suffix = ("n" if temp_out.strip().startswith("-") else "p") + digits
 
                 base = ts_norm.strftime("%Y%m%d%H") + "0000" + temp_suffix
                 new_name = f"R{base}.JPG"
 
                 if rename:
-                    target = p.with_name(new_name)
-                    if target.exists():
-                        # avoid collision
-                        target = p.with_name(f"{target.stem}_DUP{p.stem}{target.suffix}")
-                    p.rename(target)
-                    new_written = target.name
+                    if skip_already_renamed and already_renamed:
+                        new_written = p.name
+                    else:
+                        target = p.with_name(new_name)
+                        if target.exists():
+                            # avoid collision
+                            target = p.with_name(f"{target.stem}_DUP{p.stem}{target.suffix}")
+                        p.rename(target)
+                        new_written = target.name
                 else:
                     new_written = new_name
 
@@ -480,6 +490,7 @@ def run_gui(script_dir: Path) -> None:
                 max_images=None,
                 no_progress=True,  # GUI has its own progress bars
                 progress_cb=lambda d, t: q.put(("job_progress", job_id, d, t)),
+                skip_already_renamed=True,
             )
             q.put(("job_done", job_id, str(out_csv)))
         except Exception as exc:
@@ -590,6 +601,7 @@ def main() -> None:
     ap.add_argument("--max-images", type=int, default=None, help="Process at most N images (debug)")
     ap.add_argument("--no-progress", action="store_true", help="Disable progress bar")
     ap.add_argument("--gui", action="store_true", help="Launch a simple GUI")
+    ap.add_argument("--skip-already-renamed", action="store_true", help="When renaming, skip files already matching the RYYYYMMDDHH0000[pn]TT.JPG pattern")
     args = ap.parse_args()
 
     script_dir = Path(__file__).resolve().parent
@@ -615,6 +627,7 @@ def main() -> None:
         minutes_seconds_zero=bool(args.minutes_seconds_zero),
         max_images=args.max_images,
         no_progress=bool(args.no_progress),
+        skip_already_renamed=bool(args.skip_already_renamed),
     )
 
     print(f"Done. Wrote {Path(args.csv)}")
